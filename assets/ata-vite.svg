@@ -1,0 +1,47 @@
+<svg width="100%" viewBox="0 0 1610 910" xmlns="http://www.w3.org/2000/svg" role="img" style="font-family: &quot;IBM Plex Mono&quot;, Inter, -apple-system, monospace;">
+<title style="fill:rgb(0, 0, 0);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;IBM Plex Mono&quot;, Inter, -apple-system, monospace;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">ata-vite — Vite logosu i harfi olarak</title>
+<desc style="fill:rgb(0, 0, 0);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;IBM Plex Mono&quot;, Inter, -apple-system, monospace;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">Beyaz zemin üzerinde ata-v te yazısı, i harfinin yerinde Vite logosu</desc>
+
+<defs>
+  <linearGradient id="viteTriangle" x1="6.00017" y1="32.9999" x2="235" y2="344" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#41D1FF"/>
+    <stop offset="1" stop-color="#BD34FE"/>
+  </linearGradient>
+  <linearGradient id="viteBolt" x1="194.651" y1="8.81818" x2="236.076" y2="292.989" gradientUnits="userSpaceOnUse">
+    <stop stop-color="#FFEA83"/>
+    <stop offset="0.0833333" stop-color="#FFDD35"/>
+    <stop offset="1" stop-color="#FFA800"/>
+  </linearGradient>
+</defs>
+
+<rect x="0" y="0" width="1600" height="900" fill="#FFFFFF" style="fill:rgb(255, 255, 255);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;IBM Plex Mono&quot;, Inter, -apple-system, monospace;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+<!--
+  Strateji: metni iki parçaya bölüp ortada logo için boşluk bırak.
+  Sol parça: "ata-v"  (sağa hizalı, logo başlangıcında bitiyor)
+  Sağ parça: "te"     (sola hizalı, logo bitiminden başlıyor)
+  Logo: harf yüksekliğinde (~170-180px), iki parça arasında
+-->
+
+<g font-family="'IBM Plex Mono', 'Inter', -apple-system, monospace" fill="#0A0A0A" font-size="200" letter-spacing="-8" font-weight="600" style="fill:rgb(10, 10, 10);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;IBM Plex Mono&quot;, Inter, -apple-system, monospace;font-size:200px;font-weight:600;text-anchor:start;dominant-baseline:auto">
+  <!-- Sol parça, logonun sol kenarında bitiyor -->
+  <text x="870" y="500" text-anchor="end" style="fill:rgb(10, 10, 10);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;IBM Plex Mono&quot;, Inter, -apple-system, monospace;font-size:200px;font-weight:600;text-anchor:end;dominant-baseline:auto">ata-v</text>
+  <!-- Sağ parça, logonun sağ kenarından başlıyor -->
+  <text x="990" y="500" text-anchor="start" style="fill:rgb(10, 10, 10);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;IBM Plex Mono&quot;, Inter, -apple-system, monospace;font-size:200px;font-weight:600;text-anchor:start;dominant-baseline:auto">te</text>
+</g>
+
+<!--
+  Logo boyutu harf yüksekliğine yakın.
+  Büyük harf yüksekliği ~140px. Logo 160px yüksekliğe ölçeklensin → scale 0.396
+  Orijinal: 410x404. Ölçekli: ~162x160.
+  Logo merkezi x=930, baseline y=500 civarında olsun.
+  O yüzden translate: x = 930 - 81 = 849, y = 500 - 160 = 340 (biraz ayarlanacak)
+  Harflerin gerçek tepesi (cap) y=360 civarında, baseline y=500.
+  Logoyu harfin optik merkeziyle hizalamak için üst kenarı y=355 yapalım.
+-->
+<g transform="translate(859, 355) scale(0.35)" style="fill:rgb(0, 0, 0);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;IBM Plex Mono&quot;, Inter, -apple-system, monospace;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto">
+  <path d="M399.641 59.5246L215.643 388.545C211.844 395.338 202.084 395.378 198.228 388.618L10.5817 59.5563C6.38087 52.1896 12.6802 43.2665 21.0281 44.7586L205.223 77.6824C206.398 77.8924 207.601 77.8904 208.776 77.6763L389.119 44.8058C397.439 43.2894 403.768 52.1434 399.641 59.5246Z" fill="url(#viteTriangle)" style="stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;IBM Plex Mono&quot;, Inter, -apple-system, monospace;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+  <path d="M292.965 1.5744L156.801 28.2552C154.563 28.6937 152.906 30.5903 152.771 32.8664L144.395 174.33C144.198 177.662 147.258 180.248 150.51 179.498L188.42 170.749C191.967 169.931 195.172 173.055 194.443 176.622L183.18 231.775C182.422 235.487 185.907 238.661 189.532 237.56L212.947 230.446C216.577 229.344 220.065 232.527 219.297 236.242L201.398 322.875C200.278 328.294 207.486 331.249 210.492 326.603L212.5 323.5L323.454 102.072C325.312 98.3645 322.108 94.137 318.036 94.9228L279.014 102.454C275.347 103.161 272.227 99.746 273.262 96.1583L298.731 7.86689C299.767 4.27314 296.636 0.855181 292.965 1.5744Z" fill="url(#viteBolt)" style="stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;IBM Plex Mono&quot;, Inter, -apple-system, monospace;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+</g>
+
+</svg>

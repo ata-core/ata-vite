@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./assets/ata-vite.svg" alt="ata-vite" width="640" />
+</p>
+
 # ata-vite
 
 Vite plugin that compiles JSON Schema files into self-contained [`ata-validator`](https://ata-validator.com) modules plus TypeScript declarations. Build time instead of runtime, ~1 KB gzipped per schema, full type narrowing via `isValid`.
