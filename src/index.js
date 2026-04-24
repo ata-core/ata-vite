@@ -9,7 +9,6 @@
 
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
 
 const DEFAULT_OPTIONS = {
   schemas: 'schemas/**/*.json',
@@ -82,11 +81,25 @@ function globToRegExp(pattern) {
   let re = '^'
   for (let i = 0; i < pattern.length; i++) {
     const c = pattern[i]
-    if (c === '*') {
-      if (pattern[i + 1] === '*') { re += '.*'; i++ } else { re += '[^/]*' }
-    } else if (c === '?') re += '[^/]'
-    else if ('.+^${}()|[]\\'.includes(c)) re += '\\' + c
-    else re += c
+    // `**/` matches zero or more path segments, so schemas/**/*.json
+    // also picks up files that live directly in schemas/.
+    if (c === '*' && pattern[i + 1] === '*') {
+      if (pattern[i + 2] === '/') {
+        re += '(?:.*/)?'
+        i += 2
+      } else {
+        re += '.*'
+        i++
+      }
+    } else if (c === '*') {
+      re += '[^/]*'
+    } else if (c === '?') {
+      re += '[^/]'
+    } else if ('.+^${}()|[]\\'.includes(c)) {
+      re += '\\' + c
+    } else {
+      re += c
+    }
   }
   return new RegExp(re + '$')
 }
@@ -212,5 +225,4 @@ export async function compile(options = {}) {
   return { files, results }
 }
 
-export const __internal = { loadAta, resolveSchemaFiles, compileOne, outputPaths }
-void pathToFileURL // keep import for future use; avoids dead-import trimming in some bundlers
+export const __internal = { loadAta, resolveSchemaFiles, compileOne, outputPaths, globToRegExp }

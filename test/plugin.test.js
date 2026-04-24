@@ -4,7 +4,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import ataVite, { compile } from '../src/index.js'
+import ataVite, { compile, __internal } from '../src/index.js'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const fixturesRoot = path.join(here, 'fixtures')
@@ -93,5 +93,14 @@ describe('ata-vite', () => {
     assert.equal(typeof plugin.handleHotUpdate, 'function')
     assert.equal(typeof plugin.watchChange, 'function')
     assert.equal(typeof plugin.configResolved, 'function')
+  })
+
+  it('globToRegExp: `**/` matches zero or more path segments', () => {
+    const re = __internal.globToRegExp('schemas/**/*.json')
+    assert.equal(re.test('schemas/user.json'), true, 'root-level file must match')
+    assert.equal(re.test('schemas/sub/user.json'), true, 'one-level nested must match')
+    assert.equal(re.test('schemas/a/b/c/user.json'), true, 'deep nested must match')
+    assert.equal(re.test('schemas/user.txt'), false, 'non-json must not match')
+    assert.equal(re.test('other/user.json'), false, 'outside base must not match')
   })
 })

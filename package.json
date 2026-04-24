@@ -34,6 +34,9 @@
     "url": "https://github.com/ata-core/ata-vite/issues"
   },
   "homepage": "https://github.com/ata-core/ata-vite#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "peerDependencies": {
     "ata-validator": ">=0.11.1",
     "vite": ">=5.0.0"
