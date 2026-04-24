@@ -1,0 +1,45 @@
+{
+  "name": "ata-vite",
+  "version": "0.1.0",
+  "description": "Vite plugin that compiles JSON Schema files to ata-validator standalone modules with TypeScript types.",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "require": "./src/index.js"
+    }
+  },
+  "files": [
+    "src/"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "keywords": [
+    "vite",
+    "vite-plugin",
+    "json-schema",
+    "ata-validator",
+    "typescript",
+    "codegen"
+  ],
+  "author": "Mert Can Altin <mertgold60@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ata-core/ata-vite.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ata-core/ata-vite/issues"
+  },
+  "homepage": "https://github.com/ata-core/ata-vite#readme",
+  "peerDependencies": {
+    "ata-validator": ">=0.11.1",
+    "vite": ">=5.0.0"
+  },
+  "devDependencies": {
+    "ata-validator": "file:../ata",
+    "vite": "^7.3.2"
+  }
+}
