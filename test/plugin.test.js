@@ -43,6 +43,42 @@ describe('ata-vite', () => {
     }
   })
 
+  it('programmatic compile writes validator + types for js files', async () => {
+    const result = await compile({
+      schemas: ['schemas/*.js'],
+      root: fixturesRoot,
+    })
+    assert.equal(result.files.length, 1)
+    assert(result.files.every((f) => f.endsWith('.js')))
+
+    for (const file of result.files) {
+      const base = path.basename(file, '.js')
+      const dir = path.dirname(file)
+      const mjs = await fs.readFile(path.join(dir, `${base}.validator.mjs`), 'utf8')
+      const dts = await fs.readFile(path.join(dir, `${base}.validator.d.mts`), 'utf8')
+      assert.match(mjs, /export \{ validate, isValid \}/)
+      assert.match(dts, /export declare function isValid/)
+    }
+  })
+
+  it('programmatic compile writes validator + types for ts files', async () => {
+    const result = await compile({
+      schemas: ['schemas/*.ts'],
+      root: fixturesRoot,
+    })
+    assert.equal(result.files.length, 1)
+    assert(result.files.every((f) => f.endsWith('.ts')))
+
+    for (const file of result.files) {
+      const base = path.basename(file, '.ts')
+      const dir = path.dirname(file)
+      const mjs = await fs.readFile(path.join(dir, `${base}.validator.mjs`), 'utf8')
+      const dts = await fs.readFile(path.join(dir, `${base}.validator.d.mts`), 'utf8')
+      assert.match(mjs, /export \{ validate, isValid \}/)
+      assert.match(dts, /export declare function isValid/)
+    }
+  })
+
   it('compiled validator accepts valid data and rejects invalid', async () => {
     await compile({ schemas: 'schemas/*.json', root: fixturesRoot })
     const mod = await import(path.join(fixturesRoot, 'schemas/user.validator.mjs'))
