@@ -42,7 +42,10 @@
     "vite": ">=5.0.0"
   },
   "devDependencies": {
-    "ata-validator": "file:../ata",
+    "ata-validator": "^0.15.0",
     "vite": "^7.3.2"
+  },
+  "dependencies": {
+    "jiti": "^2.7.0"
   }
 }

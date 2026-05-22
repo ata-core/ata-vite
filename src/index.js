@@ -9,6 +9,9 @@
 
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { createJiti } from 'jiti'
+
+const jiti = createJiti(import.meta.url, { tsconfigPaths: true })
 
 const DEFAULT_OPTIONS = {
   schemas: 'schemas/**/*.json',
@@ -114,11 +117,6 @@ function outputPaths(schemaFile, options, root) {
   return { dir, mjs, dts }
 }
 
-async function readJson(file) {
-  const text = await fs.readFile(file, 'utf8')
-  return JSON.parse(text)
-}
-
 async function writeIfChanged(file, contents) {
   try {
     const existing = await fs.readFile(file, 'utf8')
@@ -132,7 +130,7 @@ async function writeIfChanged(file, contents) {
 async function compileOne(schemaFile, options, root, api, logger) {
   let schema
   try {
-    schema = await readJson(schemaFile)
+    schema = await jiti.import(schemaFile, { default: true })
   } catch (err) {
     logger?.warn?.(`[ata-vite] cannot parse ${path.relative(root, schemaFile)}: ${err.message}`)
     return { changed: false, typeName: null, paths: null }
