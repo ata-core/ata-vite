@@ -75,6 +75,20 @@ export default {
 } as const
 ```
 
+On `ata-validator` 0.16.0 or newer you can wrap the object in `defineSchema` for
+keyword autocomplete and value checking while authoring, instead of `as const`:
+
+```ts
+// schemas/user.ts
+import { defineSchema } from 'ata-validator'
+
+export default defineSchema({
+  type: 'object',
+  properties: { id: { type: 'integer', minimum: 1 } },
+  required: ['id'],
+})
+```
+
 Authoring in JS or TS lets you add comments, share constants across schemas, and
 compose with plain code, which JSON cannot do. TS is loaded through
 [`jiti`](https://github.com/unjs/jiti) so it works without a separate build step
