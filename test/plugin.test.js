@@ -105,6 +105,17 @@ describe('ata-vite', () => {
     assert.equal(mod.isValid({ id: 0 }), false, 'minimum from the aliased fragment must apply')
   })
 
+  it('composes a schema by extending a base .json inside a .ts file', async () => {
+    const result = await compile({ schemas: 'schemas/extended-user.ts', root: fixturesRoot })
+    assert.equal(result.files.length, 1)
+
+    const mod = await import(path.join(fixturesRoot, 'schemas/extended-user.validator.mjs'))
+    assert.equal(mod.isValid({ id: 1, name: 'alice' }), true, 'base shape still validates')
+    assert.equal(mod.isValid({ id: 1, name: 'alice', age: 30 }), true)
+    // The added `age: number` proves the extension was applied at build time.
+    assert.equal(mod.isValid({ id: 1, name: 'alice', age: 'thirty' }), false)
+  })
+
   it('outDir relocates generated files outside the source tree', async () => {
     const outRel = 'generated'
     const result = await compile({

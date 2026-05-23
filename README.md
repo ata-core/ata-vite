@@ -116,6 +116,18 @@ Aliases apply to `.ts` only. `.js` schemas are loaded by native import, which ha
 no notion of aliases, so use relative paths there. Vite aliases defined with a
 RegExp `find` are skipped, since only string aliases map to the loader.
 
+You can also extend a base JSON schema from a JS or TS file, which is handy for
+sharing one shape across several variants:
+
+```ts
+// schemas/admin.ts
+import user from './user.json' with { type: 'json' }
+
+user.properties.role = { type: 'string', const: 'admin' }
+
+export default user
+```
+
 One thing to know: JS and TS schemas execute at build time, the same as your
 `vite.config`. JSON does not run code, so keep using it when a schema is fully
 static and untrusted.
