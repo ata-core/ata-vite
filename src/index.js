@@ -121,23 +121,51 @@ async function readJson(file) {
   return JSON.parse(text)
 }
 
-// One jiti instance, created on first .ts schema and reused. fsCache keeps
-// transpilation on disk so repeat builds are cheap; moduleCache:false means
-// each import re-evaluates, so HMR picks up edits without re-transpiling.
-let jitiPromise = null
-function getJiti() {
-  return (jitiPromise ??= (async () => {
-    let mod
-    try {
-      mod = await import('jiti')
-    } catch {
-      throw new Error(
-        'ata-vite: compiling .ts/.mts schema files needs "jiti". Install it with: npm install jiti',
-      )
-    }
-    const createJiti = mod.createJiti ?? mod.default
-    return createJiti(import.meta.url, { fsCache: true, moduleCache: false })
-  })())
+// Vite normalizes resolve.alias to an array of { find, replacement } by the time
+// configResolved runs, but accept the object form too. jiti's `alias` is a
+// Record<string, string>, so only string finds carry over; RegExp finds are
+// dropped (they cannot be expressed as a record key).
+function normalizeAlias(viteAlias) {
+  if (!viteAlias) return undefined
+  const entries = Array.isArray(viteAlias)
+    ? viteAlias
+    : Object.entries(viteAlias).map(([find, replacement]) => ({ find, replacement }))
+  const out = {}
+  for (const { find, replacement } of entries) {
+    if (typeof find === 'string' && typeof replacement === 'string') out[find] = replacement
+  }
+  return Object.keys(out).length ? out : undefined
+}
+
+// jiti instances are created on first .ts schema and reused, keyed by alias map
+// so different alias sets do not share an instance. fsCache keeps transpilation
+// on disk; moduleCache:false re-evaluates each import so HMR picks up edits.
+// tsconfigPaths:true resolves TypeScript `paths` aliases from tsconfig.
+const jitiInstances = new Map()
+function getJiti(alias) {
+  const key = alias ? JSON.stringify(alias) : ''
+  let p = jitiInstances.get(key)
+  if (!p) {
+    p = (async () => {
+      let mod
+      try {
+        mod = await import('jiti')
+      } catch {
+        throw new Error(
+          'ata-vite: compiling .ts/.mts schema files needs "jiti". Install it with: npm install jiti',
+        )
+      }
+      const createJiti = mod.createJiti ?? mod.default
+      return createJiti(import.meta.url, {
+        fsCache: true,
+        moduleCache: false,
+        tsconfigPaths: true,
+        ...(alias ? { alias } : {}),
+      })
+    })()
+    jitiInstances.set(key, p)
+  }
+  return p
 }
 
 // A schema module exports the schema as `default` (or a named `schema`).
@@ -149,7 +177,7 @@ function pickSchema(mod) {
 // JSON is read as inert text. JS goes through native import. TS goes through
 // jiti. `fresh` busts the native module cache on the HMR/watch path only, so
 // the one-shot buildStart keeps the registry clean.
-async function loadSchema(file, fresh = false) {
+async function loadSchema(file, fresh = false, alias) {
   const ext = path.extname(file).toLowerCase()
   if (ext === '.json' || ext === '') {
     return readJson(file)
@@ -158,7 +186,7 @@ async function loadSchema(file, fresh = false) {
     const url = pathToFileURL(file).href + (fresh ? `?t=${Date.now()}` : '')
     return pickSchema(await import(url))
   }
-  const jiti = await getJiti()
+  const jiti = await getJiti(alias)
   return pickSchema(await jiti.import(file))
 }
 
@@ -175,7 +203,7 @@ async function writeIfChanged(file, contents) {
 async function compileOne(schemaFile, options, root, api, logger, fresh = false) {
   let schema
   try {
-    schema = await loadSchema(schemaFile, fresh)
+    schema = await loadSchema(schemaFile, fresh, options.alias)
   } catch (err) {
     logger?.warn?.(`[ata-vite] cannot load ${path.relative(root, schemaFile)}: ${err.message}`)
     return { changed: false, typeName: null, paths: null }
@@ -237,6 +265,9 @@ export default function ataVite(userOptions = {}) {
     configResolved(config) {
       root = config.root || process.cwd()
       logger = config.logger
+      // Carry Vite's resolve.alias into the .ts loader so aliased imports in
+      // schema files resolve. tsconfig `paths` are handled by jiti directly.
+      options.alias = normalizeAlias(config.resolve && config.resolve.alias)
     },
 
     async buildStart() {

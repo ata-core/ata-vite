@@ -96,6 +96,26 @@ on every supported Node version. `jiti` ships as a dependency and is loaded only
 when a `.ts` file is actually compiled, so JSON- and JS-only projects pay nothing
 for it.
 
+A `.ts` schema can import shared fragments through path aliases. Both your
+tsconfig `compilerOptions.paths` and your Vite `resolve.alias` entries are
+resolved:
+
+```ts
+// schemas/user.ts
+import { idField } from '#shared/fields'   // tsconfig paths
+import { email } from '@/schemas/common'   // vite resolve.alias
+
+export default {
+  type: 'object',
+  properties: { id: idField, email },
+  required: ['id'],
+}
+```
+
+Aliases apply to `.ts` only. `.js` schemas are loaded by native import, which has
+no notion of aliases, so use relative paths there. Vite aliases defined with a
+RegExp `find` are skipped, since only string aliases map to the loader.
+
 One thing to know: JS and TS schemas execute at build time, the same as your
 `vite.config`. JSON does not run code, so keep using it when a schema is fully
 static and untrusted.

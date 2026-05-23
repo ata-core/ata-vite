@@ -69,7 +69,7 @@ describe('ata-vite', () => {
   })
 
   it('compiles a .ts schema via jiti into a working validator', async () => {
-    const result = await compile({ schemas: 'schemas/*.ts', root: fixturesRoot })
+    const result = await compile({ schemas: 'schemas/account.ts', root: fixturesRoot })
     assert.equal(result.files.length, 1)
     assert(result.files[0].endsWith('account.ts'))
 
@@ -77,6 +77,32 @@ describe('ata-vite', () => {
     assert.equal(mod.isValid({ id: 1, email: 'a@b' }), true)
     assert.equal(mod.isValid({ id: 0, email: 'a@b' }), false, 'minimum must be enforced')
     assert.equal(mod.isValid({ email: 'a@b' }), false, 'required must be enforced')
+  })
+
+  it('resolves tsconfig path aliases in a .ts schema', async () => {
+    const result = await compile({ schemas: 'schemas/aliased.ts', root: fixturesRoot })
+    assert.equal(result.files.length, 1)
+
+    const mod = await import(path.join(fixturesRoot, 'schemas/aliased.validator.mjs'))
+    assert.equal(mod.isValid({ id: 1 }), true)
+    assert.equal(mod.isValid({ id: 0 }), false, 'minimum from the aliased fragment must apply')
+    assert.equal(mod.isValid({}), false, 'required must be enforced')
+  })
+
+  it('resolves Vite resolve.alias in a .ts schema', async () => {
+    const plugin = ataVite({ schemas: 'schemas/vite-aliased.ts' })
+    plugin.configResolved({
+      root: fixturesRoot,
+      logger: { info() {}, warn() {} },
+      resolve: {
+        alias: [{ find: '@fields', replacement: path.join(fixturesRoot, 'shared/fields.ts') }],
+      },
+    })
+    await plugin.buildStart()
+
+    const mod = await import(path.join(fixturesRoot, 'schemas/vite-aliased.validator.mjs'))
+    assert.equal(mod.isValid({ id: 1 }), true)
+    assert.equal(mod.isValid({ id: 0 }), false, 'minimum from the aliased fragment must apply')
   })
 
   it('outDir relocates generated files outside the source tree', async () => {
