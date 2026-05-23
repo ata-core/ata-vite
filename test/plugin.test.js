@@ -54,6 +54,31 @@ describe('ata-vite', () => {
     assert.equal(r.valid, true)
   })
 
+  it('compiles a .js schema (default export) into a working validator', async () => {
+    const result = await compile({ schemas: 'schemas/*.js', root: fixturesRoot })
+    assert.equal(result.files.length, 1)
+    assert(result.files[0].endsWith('product.js'))
+
+    const mod = await import(path.join(fixturesRoot, 'schemas/product.validator.mjs'))
+    assert.equal(mod.isValid({ sku: 'abc', price: 10 }), true)
+    assert.equal(mod.isValid({ sku: '', price: 10 }), false, 'minLength must be enforced')
+    assert.equal(mod.isValid({ sku: 'abc' }), false, 'required must be enforced')
+
+    const dts = await fs.readFile(path.join(fixturesRoot, 'schemas/product.validator.d.mts'), 'utf8')
+    assert.match(dts, /export declare function isValid/)
+  })
+
+  it('compiles a .ts schema via jiti into a working validator', async () => {
+    const result = await compile({ schemas: 'schemas/*.ts', root: fixturesRoot })
+    assert.equal(result.files.length, 1)
+    assert(result.files[0].endsWith('account.ts'))
+
+    const mod = await import(path.join(fixturesRoot, 'schemas/account.validator.mjs'))
+    assert.equal(mod.isValid({ id: 1, email: 'a@b' }), true)
+    assert.equal(mod.isValid({ id: 0, email: 'a@b' }), false, 'minimum must be enforced')
+    assert.equal(mod.isValid({ email: 'a@b' }), false, 'required must be enforced')
+  })
+
   it('outDir relocates generated files outside the source tree', async () => {
     const outRel = 'generated'
     const result = await compile({

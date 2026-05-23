@@ -4,7 +4,9 @@
 
 # ata-vite
 
-Vite plugin that compiles JSON Schema files into self-contained [`ata-validator`](https://ata-validator.com) modules plus TypeScript declarations. Build time instead of runtime, ~1 KB gzipped per schema, full type narrowing via `isValid`.
+Vite plugin that compiles schema files into self-contained [`ata-validator`](https://ata-validator.com) modules plus TypeScript declarations. Build time instead of runtime, ~1 KB gzipped per schema, full type narrowing via `isValid`.
+
+Schemas can be authored as `.json`, `.js`, or `.ts`.
 
 ## Install
 
@@ -49,6 +51,40 @@ export function handle(input: unknown) {
   return { ok: false, errors: validate(input).valid ? [] : validate(input).errors }
 }
 ```
+
+## Schema sources: JSON, JS, TS
+
+Point `schemas` at any mix of `.json`, `.js`, and `.ts` files:
+
+```ts
+ata({ schemas: 'schemas/**/*.{json,js,ts}' })
+```
+
+JSON stays the default and is read as inert text. JS and TS modules export the
+schema as the default export (a named `schema` export also works):
+
+```ts
+// schemas/user.ts
+export default {
+  type: 'object',
+  properties: {
+    id: { type: 'integer', minimum: 1 },
+    role: { type: 'string', enum: ['admin', 'user'] },
+  },
+  required: ['id'],
+} as const
+```
+
+Authoring in JS or TS lets you add comments, share constants across schemas, and
+compose with plain code, which JSON cannot do. TS is loaded through
+[`jiti`](https://github.com/unjs/jiti) so it works without a separate build step
+on every supported Node version. `jiti` ships as a dependency and is loaded only
+when a `.ts` file is actually compiled, so JSON- and JS-only projects pay nothing
+for it.
+
+One thing to know: JS and TS schemas execute at build time, the same as your
+`vite.config`. JSON does not run code, so keep using it when a schema is fully
+static and untrusted.
 
 ## Options
 

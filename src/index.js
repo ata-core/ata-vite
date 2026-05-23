@@ -1,6 +1,7 @@
-// ata-vite: Vite plugin for build-time JSON Schema compilation.
+// ata-vite: Vite plugin for build-time schema compilation.
 //
-// For each JSON schema matched by `schemas`, emit:
+// Schemas may be authored as .json (read as text), .js (native import), or
+// .ts (loaded through jiti). For each schema matched by `schemas`, emit:
 //   - <base>.validator.mjs      (self-contained validator)
 //   - <base>.validator.d.mts    (TypeScript declarations, opt-in)
 //
@@ -9,6 +10,7 @@
 
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 const DEFAULT_OPTIONS = {
   schemas: 'schemas/**/*.json',
@@ -119,6 +121,47 @@ async function readJson(file) {
   return JSON.parse(text)
 }
 
+// One jiti instance, created on first .ts schema and reused. fsCache keeps
+// transpilation on disk so repeat builds are cheap; moduleCache:false means
+// each import re-evaluates, so HMR picks up edits without re-transpiling.
+let jitiPromise = null
+function getJiti() {
+  return (jitiPromise ??= (async () => {
+    let mod
+    try {
+      mod = await import('jiti')
+    } catch {
+      throw new Error(
+        'ata-vite: compiling .ts/.mts schema files needs "jiti". Install it with: npm install jiti',
+      )
+    }
+    const createJiti = mod.createJiti ?? mod.default
+    return createJiti(import.meta.url, { fsCache: true, moduleCache: false })
+  })())
+}
+
+// A schema module exports the schema as `default` (or a named `schema`).
+// For CJS loaded over the ESM interop, `default` holds module.exports.
+function pickSchema(mod) {
+  return mod?.default ?? mod?.schema ?? mod
+}
+
+// JSON is read as inert text. JS goes through native import. TS goes through
+// jiti. `fresh` busts the native module cache on the HMR/watch path only, so
+// the one-shot buildStart keeps the registry clean.
+async function loadSchema(file, fresh = false) {
+  const ext = path.extname(file).toLowerCase()
+  if (ext === '.json' || ext === '') {
+    return readJson(file)
+  }
+  if (ext === '.js' || ext === '.mjs' || ext === '.cjs') {
+    const url = pathToFileURL(file).href + (fresh ? `?t=${Date.now()}` : '')
+    return pickSchema(await import(url))
+  }
+  const jiti = await getJiti()
+  return pickSchema(await jiti.import(file))
+}
+
 async function writeIfChanged(file, contents) {
   try {
     const existing = await fs.readFile(file, 'utf8')
@@ -129,12 +172,16 @@ async function writeIfChanged(file, contents) {
   return true
 }
 
-async function compileOne(schemaFile, options, root, api, logger) {
+async function compileOne(schemaFile, options, root, api, logger, fresh = false) {
   let schema
   try {
-    schema = await readJson(schemaFile)
+    schema = await loadSchema(schemaFile, fresh)
   } catch (err) {
-    logger?.warn?.(`[ata-vite] cannot parse ${path.relative(root, schemaFile)}: ${err.message}`)
+    logger?.warn?.(`[ata-vite] cannot load ${path.relative(root, schemaFile)}: ${err.message}`)
+    return { changed: false, typeName: null, paths: null }
+  }
+  if (!schema || typeof schema !== 'object') {
+    logger?.warn?.(`[ata-vite] ${path.relative(root, schemaFile)} did not export a schema object`)
     return { changed: false, typeName: null, paths: null }
   }
 
@@ -167,10 +214,10 @@ export default function ataVite(userOptions = {}) {
   async function compileAll() {
     const api = await (apiPromise ??= loadAta())
     const files = await resolveSchemaFiles(options.schemas, root)
-    const results = []
-    for (const file of files) {
-      results.push(await compileOne(file, options, root, api, logger))
-    }
+    // Compile in parallel so reads, transpiles and writes overlap.
+    const results = await Promise.all(
+      files.map((file) => compileOne(file, options, root, api, logger)),
+    )
     return { files, results }
   }
 
@@ -179,7 +226,8 @@ export default function ataVite(userOptions = {}) {
     const api = await (apiPromise ??= loadAta())
     const files = await resolveSchemaFiles(options.schemas, root)
     if (!files.some((f) => path.resolve(f) === path.resolve(file))) return null
-    return compileOne(file, options, root, api, logger)
+    // `fresh`: this is a change event, so bypass the JS module cache.
+    return compileOne(file, options, root, api, logger, true)
   }
 
   return {
@@ -218,10 +266,9 @@ export async function compile(options = {}) {
   const root = options.root ?? process.cwd()
   const api = await loadAta()
   const files = await resolveSchemaFiles(opts.schemas, root)
-  const results = []
-  for (const file of files) {
-    results.push(await compileOne(file, opts, root, api, null))
-  }
+  const results = await Promise.all(
+    files.map((file) => compileOne(file, opts, root, api, null)),
+  )
   return { files, results }
 }
 
