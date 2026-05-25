@@ -174,6 +174,18 @@ describe('ata-vite', () => {
     await assert.rejects(fs.access(path.join(dir, 'user.schema.validator.mjs')))
   })
 
+  it('.schema.js default export is the validate function', async () => {
+    await compile({ schemas: 'convention/*.schema.json', root: fixturesRoot })
+    const mod = await import(path.join(fixturesRoot, 'convention/user.schema.js'))
+    // default export is callable and returns the result shape
+    assert.equal(typeof mod.default, 'function')
+    assert.equal(mod.default({ id: 1, name: 'a' }).valid, true)
+    assert.equal(mod.default({ id: 0, name: 'a' }).valid, false)
+    // named exports still present
+    assert.equal(typeof mod.validate, 'function')
+    assert.equal(mod.isValid({ id: 1, name: 'a' }), true)
+  })
+
   it('globToRegExp: `**/` matches zero or more path segments', () => {
     const re = __internal.globToRegExp('schemas/**/*.json')
     assert.equal(re.test('schemas/user.json'), true, 'root-level file must match')

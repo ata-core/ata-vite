@@ -234,7 +234,18 @@ async function compileOne(schemaFile, options, root, api, logger, fresh = false)
 
   const typeName = options.nameFromFile(schemaFile)
   const paths = outputPaths(schemaFile, options, root)
-  const mjsChanged = await writeIfChanged(paths.mjs, validatorSrc)
+  let outSrc = validatorSrc
+  if (isSchemaConvention(schemaFile) && options.format !== 'cjs') {
+    // toStandaloneModule emits `export default { validate, isValid };`.
+    // For the .schema convention we make the default the validate function so
+    // `import validate from './x.schema'` works. Named exports stay intact.
+    // If the expected line is not found, leave the object default (graceful).
+    outSrc = outSrc.replace(
+      /^export default \{\s*validate(?:\s*,\s*isValid)?\s*\};?\s*$/m,
+      'export default validate;',
+    )
+  }
+  const mjsChanged = await writeIfChanged(paths.mjs, outSrc)
 
   let dtsChanged = false
   if (options.types) {
