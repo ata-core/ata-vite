@@ -106,10 +106,22 @@ function globToRegExp(pattern) {
   return new RegExp(re + '$')
 }
 
+function isSchemaConvention(file) {
+  return file.toLowerCase().endsWith('.schema.json')
+}
+
 function outputPaths(schemaFile, options, root) {
   const dir = options.outDir
     ? path.resolve(root, options.outDir, path.dirname(path.relative(root, schemaFile)))
     : path.dirname(schemaFile)
+  if (isSchemaConvention(schemaFile)) {
+    // user.schema.json -> base "user.schema" -> import './user.schema'
+    const base = path.basename(schemaFile, '.json')
+    const cjs = options.format === 'cjs'
+    const mjs = path.join(dir, `${base}.${cjs ? 'cjs' : 'js'}`)
+    const dts = path.join(dir, `${base}.${cjs ? 'd.cts' : 'd.ts'}`)
+    return { dir, mjs, dts }
+  }
   const base = path.basename(schemaFile, path.extname(schemaFile))
   const mjs = path.join(dir, `${base}.validator.${options.format === 'cjs' ? 'cjs' : 'mjs'}`)
   const dts = path.join(dir, `${base}.validator.${options.format === 'cjs' ? 'd.cts' : 'd.mts'}`)
@@ -303,4 +315,4 @@ export async function compile(options = {}) {
   return { files, results }
 }
 
-export const __internal = { loadAta, resolveSchemaFiles, compileOne, outputPaths, globToRegExp }
+export const __internal = { loadAta, resolveSchemaFiles, compileOne, outputPaths, globToRegExp, isSchemaConvention }

@@ -17,6 +17,13 @@ async function cleanup() {
       .filter((e) => e.endsWith('.validator.mjs') || e.endsWith('.validator.cjs') || e.endsWith('.d.mts') || e.endsWith('.d.cts'))
       .map((e) => fs.unlink(path.join(dir, e))),
   )
+  const conv = path.join(fixturesRoot, 'convention')
+  const convEntries = await fs.readdir(conv).catch(() => [])
+  await Promise.all(
+    convEntries
+      .filter((e) => /\.schema\.(js|cjs)$/.test(e) || /\.schema\.d\.(ts|cts)$/.test(e))
+      .map((e) => fs.unlink(path.join(conv, e))),
+  )
   const outDir = path.join(fixturesRoot, 'generated')
   await fs.rm(outDir, { recursive: true, force: true })
 }
@@ -155,6 +162,16 @@ describe('ata-vite', () => {
     assert.equal(typeof plugin.handleHotUpdate, 'function')
     assert.equal(typeof plugin.watchChange, 'function')
     assert.equal(typeof plugin.configResolved, 'function')
+  })
+
+  it('a .schema.json source emits <name>.schema.js + <name>.schema.d.ts', async () => {
+    const result = await compile({ schemas: 'convention/*.schema.json', root: fixturesRoot })
+    assert.equal(result.files.length, 1)
+    const dir = path.join(fixturesRoot, 'convention')
+    await fs.access(path.join(dir, 'user.schema.js'))
+    await fs.access(path.join(dir, 'user.schema.d.ts'))
+    // the old naming must NOT be produced for a .schema.json source
+    await assert.rejects(fs.access(path.join(dir, 'user.schema.validator.mjs')))
   })
 
   it('globToRegExp: `**/` matches zero or more path segments', () => {
