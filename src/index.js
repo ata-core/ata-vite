@@ -142,7 +142,7 @@ function outputPaths(schemaFile, options, root) {
     : path.dirname(schemaFile)
   if (isSchemaConvention(schemaFile)) {
     // user.schema.json -> base "user.schema" -> import './user.schema'
-    const base = path.basename(schemaFile, '.json')
+    const base = path.basename(schemaFile.replace(/\.json$/i, ''))
     const cjs = options.format === 'cjs'
     const mjs = path.join(dir, `${base}.${cjs ? 'cjs' : 'js'}`)
     const dts = path.join(dir, `${base}.${cjs ? 'd.cts' : 'd.ts'}`)
@@ -261,24 +261,32 @@ async function compileOne(schemaFile, options, root, api, logger, fresh = false)
   const typeName = deriveTypeName(schema, schemaFile, options)
   const paths = outputPaths(schemaFile, options, root)
   let outSrc = validatorSrc
+  let defaultRewritten = false
   if (isSchemaConvention(schemaFile) && options.format !== 'cjs') {
     // toStandaloneModule emits `export default { validate, isValid };`.
     // For the .schema convention we make the default the validate function so
     // `import validate from './x.schema'` works. Named exports stay intact.
-    // If the expected line is not found, leave the object default (graceful).
-    outSrc = outSrc.replace(
+    const replaced = outSrc.replace(
       /^export default \{\s*validate(?:\s*,\s*isValid)?\s*\};?\s*$/m,
       'export default validate;',
     )
+    if (replaced !== outSrc) {
+      outSrc = replaced
+      defaultRewritten = true
+    } else {
+      // ata's standalone output format changed: do NOT rewrite the .d.ts default
+      // either, or the type would claim a callable default the module does not have.
+      logger?.warn?.(`[ata-vite] could not set default export to validate for ${path.relative(root, schemaFile)} (ata output format changed); keeping the { validate, isValid } default`)
+    }
   }
   const mjsChanged = await writeIfChanged(paths.mjs, outSrc)
 
   let dtsChanged = false
   if (options.types) {
     let dtsSrc = api.toTypeScript(schema, { name: typeName })
-    if (isSchemaConvention(schemaFile) && options.format !== 'cjs') {
-      // toTypeScript emits `declare const _default: { validate: ...; isValid: ...; }; export default _default;`
-      // Rewrite to make the default the validate function, matching the .js rewrite above.
+    // Only rewrite the .d.ts default when the .js default was actually rewritten,
+    // so the declared default and the runtime default can never disagree.
+    if (defaultRewritten) {
       dtsSrc = dtsSrc.replace(
         /^declare const _default:[^\n]*\nexport default _default;?\s*$/m,
         'export { validate as default };',

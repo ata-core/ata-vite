@@ -6,3 +6,5 @@ test/fixtures/**/*.d.mts
 test/fixtures/**/*.d.cts
 test/fixtures/generated/
 .DS_Store
+test/fixtures/**/*.schema.js
+test/fixtures/**/*.schema.d.ts

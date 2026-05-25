@@ -228,4 +228,14 @@ describe('ata-vite', () => {
     assert.equal(re.test('schemas/user.txt'), false, 'non-json must not match')
     assert.equal(re.test('other/user.json'), false, 'outside base must not match')
   })
+
+  it('cjs convention keeps the object default and emits .cjs/.d.cts', async () => {
+    await compile({ schemas: 'convention/user.schema.json', root: fixturesRoot, format: 'cjs' })
+    const dir = path.join(fixturesRoot, 'convention')
+    await fs.access(path.join(dir, 'user.schema.cjs'))
+    await fs.access(path.join(dir, 'user.schema.d.cts'))
+    const cjs = await fs.readFile(path.join(dir, 'user.schema.cjs'), 'utf8')
+    // cjs convention is NOT rewritten to a function default
+    assert.doesNotMatch(cjs, /export default validate/)
+  })
 })

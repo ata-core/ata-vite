@@ -39,6 +39,8 @@ The plugin generates `user.schema.js` (the zero-dependency validator) and
 exports. The type name comes from the schema's `title`, then its `$id`, then the
 file name.
 
+The function default applies to ESM output. With `format: 'cjs'` the convention emits `.cjs` / `.d.cts` and the default stays the `{ validate, isValid }` object.
+
 `moduleResolution`: `bundler` and classic `node` resolve `./user.schema`
 directly. With `node16`/`nodenext`, import `./user.schema.js`.
 
