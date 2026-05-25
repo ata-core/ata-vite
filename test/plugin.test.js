@@ -166,10 +166,12 @@ describe('ata-vite', () => {
 
   it('a .schema.json source emits <name>.schema.js + <name>.schema.d.ts', async () => {
     const result = await compile({ schemas: 'convention/*.schema.json', root: fixturesRoot })
-    assert.equal(result.files.length, 1)
+    assert.equal(result.files.length, 2)
     const dir = path.join(fixturesRoot, 'convention')
     await fs.access(path.join(dir, 'user.schema.js'))
     await fs.access(path.join(dir, 'user.schema.d.ts'))
+    await fs.access(path.join(dir, 'order.schema.js'))
+    await fs.access(path.join(dir, 'order.schema.d.ts'))
     // the old naming must NOT be produced for a .schema.json source
     await assert.rejects(fs.access(path.join(dir, 'user.schema.validator.mjs')))
   })
@@ -184,6 +186,16 @@ describe('ata-vite', () => {
     // named exports still present
     assert.equal(typeof mod.validate, 'function')
     assert.equal(mod.isValid({ id: 1, name: 'a' }), true)
+  })
+
+  it('type name comes from title, then $id basename, then filename', async () => {
+    await compile({ schemas: 'convention/*.schema.json', root: fixturesRoot })
+    const userDts = await fs.readFile(path.join(fixturesRoot, 'convention/user.schema.d.ts'), 'utf8')
+    // user.schema.json has "title": "User"
+    assert.match(userDts, /export (type|interface) User\b/)
+    const orderDts = await fs.readFile(path.join(fixturesRoot, 'convention/order.schema.d.ts'), 'utf8')
+    // order.schema.json has no title; $id basename is "order"
+    assert.match(orderDts, /export (type|interface) Order\b/)
   })
 
   it('globToRegExp: `**/` matches zero or more path segments', () => {

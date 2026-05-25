@@ -12,6 +12,26 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 
+function pascal(str) {
+  const cleaned = String(str)
+    .replace(/[^A-Za-z0-9_]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .replace(/^[0-9]/, '_$&')
+  if (!cleaned) return 'Schema'
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
+}
+
+function deriveTypeName(schema, file, options) {
+  if (schema && typeof schema.title === 'string' && schema.title.trim()) {
+    return pascal(schema.title)
+  }
+  if (schema && typeof schema.$id === 'string' && schema.$id.trim()) {
+    const base = path.basename(schema.$id).replace(/\.[^.]+$/, '')
+    if (base) return pascal(base)
+  }
+  return options.nameFromFile(file)
+}
+
 const DEFAULT_OPTIONS = {
   schemas: 'schemas/**/*.json',
   outDir: null, // default: alongside each input
@@ -19,9 +39,8 @@ const DEFAULT_OPTIONS = {
   abortEarly: false,
   types: true,
   nameFromFile: (file) => {
-    const base = path.basename(file, path.extname(file))
-    const cleaned = base.replace(/[^A-Za-z0-9_]/g, '_').replace(/^[0-9]/, '_$&')
-    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1)
+    const base = path.basename(file, path.extname(file)).replace(/\.schema$/i, '')
+    return pascal(base)
   },
 }
 
@@ -232,7 +251,7 @@ async function compileOne(schemaFile, options, root, api, logger, fresh = false)
     return { changed: false, typeName: null, paths: null }
   }
 
-  const typeName = options.nameFromFile(schemaFile)
+  const typeName = deriveTypeName(schema, schemaFile, options)
   const paths = outputPaths(schemaFile, options, root)
   let outSrc = validatorSrc
   if (isSchemaConvention(schemaFile) && options.format !== 'cjs') {
