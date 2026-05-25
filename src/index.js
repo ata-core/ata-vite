@@ -275,7 +275,15 @@ async function compileOne(schemaFile, options, root, api, logger, fresh = false)
 
   let dtsChanged = false
   if (options.types) {
-    const dtsSrc = api.toTypeScript(schema, { name: typeName })
+    let dtsSrc = api.toTypeScript(schema, { name: typeName })
+    if (isSchemaConvention(schemaFile) && options.format !== 'cjs') {
+      // toTypeScript emits `declare const _default: { validate: ...; isValid: ...; }; export default _default;`
+      // Rewrite to make the default the validate function, matching the .js rewrite above.
+      dtsSrc = dtsSrc.replace(
+        /^declare const _default:[^\n]*\nexport default _default;?\s*$/m,
+        'export { validate as default };',
+      )
+    }
     dtsChanged = await writeIfChanged(paths.dts, dtsSrc)
   }
 

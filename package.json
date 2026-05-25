@@ -43,6 +43,7 @@
   },
   "devDependencies": {
     "ata-validator": "file:../ata",
+    "typescript": "^5.9.3",
     "vite": "^7.3.2"
   },
   "dependencies": {
