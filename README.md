@@ -16,6 +16,47 @@ npm install --save-dev ata-vite ata-validator
 
 `ata-validator` is a peer dependency.
 
+## The `.schema.json` convention
+
+Name a schema `user.schema.json` and import a typed, zero-dependency validator
+by its name:
+
+```ts
+import validate, { type User, isValid } from './user.schema'
+
+const r = validate(input)
+if (r.valid) {
+  // input matched the schema
+}
+if (isValid(input)) {
+  input.id // narrowed to User
+}
+```
+
+The plugin generates `user.schema.js` (the zero-dependency validator) and
+`user.schema.d.ts` (the types) next to the schema. The default export is the
+`validate` function; `validate`, `isValid`, and the inferred type are also named
+exports. The type name comes from the schema's `title`, then its `$id`, then the
+file name.
+
+`moduleResolution`: `bundler` and classic `node` resolve `./user.schema`
+directly. With `node16`/`nodenext`, import `./user.schema.js`.
+
+The default glob is `**/*.schema.json` (excluding `node_modules`). Other source
+extensions (`.json` without the `.schema` suffix, `.js`, `.ts`) keep the
+`<name>.validator.mjs` output.
+
+Add the generated files to `.gitignore`:
+
+```
+*.schema.js
+*.schema.d.ts
+```
+
+A schema with `additionalProperties: false` produces a strict, closed type;
+otherwise the type carries an index signature, matching JSON Schema's default
+that extra keys are allowed.
+
 ## Quick start
 
 ```ts
