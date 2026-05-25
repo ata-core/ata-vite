@@ -33,7 +33,7 @@ function deriveTypeName(schema, file, options) {
 }
 
 const DEFAULT_OPTIONS = {
-  schemas: 'schemas/**/*.json',
+  schemas: '**/*.schema.json',
   outDir: null, // default: alongside each input
   format: 'esm',
   abortEarly: false,
@@ -61,12 +61,16 @@ function ensureArray(value) {
 }
 
 async function resolveSchemaFiles(patterns, root) {
+  const isVendor = (abs) =>
+    path.relative(root, abs).split(path.sep).includes('node_modules')
+
   // Node 22+ ships fs.glob. Fall back to a recursive walk for older runtimes.
   if (typeof fs.glob === 'function') {
     const found = []
     for (const pattern of ensureArray(patterns)) {
       for await (const hit of fs.glob(pattern, { cwd: root })) {
-        found.push(path.resolve(root, hit))
+        const abs = path.resolve(root, hit)
+        if (!isVendor(abs)) found.push(abs)
       }
     }
     return [...new Set(found)]
@@ -89,9 +93,12 @@ async function resolveSchemaFiles(patterns, root) {
       try { entries = await fs.readdir(dir, { withFileTypes: true }) } catch { continue }
       for (const e of entries) {
         const abs = path.join(dir, e.name)
+        if (e.isDirectory()) {
+          if (e.name !== 'node_modules') stack.push(abs)
+          continue
+        }
         const rel = path.relative(root, abs).split(path.sep).join('/')
-        if (e.isDirectory()) stack.push(abs)
-        else if (re.test(rel)) matched.add(abs)
+        if (re.test(rel) && !isVendor(abs)) matched.add(abs)
       }
     }
   }

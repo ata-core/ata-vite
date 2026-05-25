@@ -24,6 +24,13 @@ async function cleanup() {
       .filter((e) => /\.schema\.(js|cjs)$/.test(e) || /\.schema\.d\.(ts|cts)$/.test(e))
       .map((e) => fs.unlink(path.join(conv, e))),
   )
+  const nm = path.join(fixturesRoot, 'nm')
+  const nmEntries = await fs.readdir(nm).catch(() => [])
+  await Promise.all(
+    nmEntries
+      .filter((e) => /\.schema\.(js|cjs)$/.test(e) || /\.schema\.d\.(ts|cts)$/.test(e))
+      .map((e) => fs.unlink(path.join(nm, e))),
+  )
   const outDir = path.join(fixturesRoot, 'generated')
   await fs.rm(outDir, { recursive: true, force: true })
 }
@@ -196,6 +203,21 @@ describe('ata-vite', () => {
     const orderDts = await fs.readFile(path.join(fixturesRoot, 'convention/order.schema.d.ts'), 'utf8')
     // order.schema.json has no title; $id basename is "order"
     assert.match(orderDts, /export (type|interface) Order\b/)
+  })
+
+  it('resolveSchemaFiles ignores node_modules', async () => {
+    const root = path.join(fixturesRoot, 'nm')
+    const files = await __internal.resolveSchemaFiles('**/*.schema.json', root)
+    const rel = files.map((f) => path.relative(root, f).split(path.sep).join('/'))
+    assert(rel.includes('app.schema.json'), 'app schema must be found')
+    assert(!rel.some((r) => r.includes('node_modules')), 'node_modules must be excluded')
+  })
+
+  it('default options compile .schema.json with no schemas option set', async () => {
+    const root = path.join(fixturesRoot, 'nm')
+    const result = await compile({ root })
+    assert(result.files.some((f) => f.endsWith('app.schema.json')))
+    await fs.access(path.join(root, 'app.schema.js'))
   })
 
   it('globToRegExp: `**/` matches zero or more path segments', () => {
