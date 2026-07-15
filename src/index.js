@@ -46,14 +46,18 @@ const DEFAULT_OPTIONS = {
 
 async function loadAta() {
   // Resolve ata-validator at runtime so peer-dep works cleanly across package managers.
+  // Standalone codegen comes from the ata-validator/build entry: the instance
+  // method it replaced was removed in ata-validator 1.0.
   const mod = await import('ata-validator')
   const api = mod.default ?? mod
-  if (!api.Validator || !api.toTypeScript) {
+  const buildMod = await import('ata-validator/build')
+  const build = buildMod.default ?? buildMod
+  if (!api.Validator || !api.toTypeScript || typeof build.toStandaloneModule !== 'function') {
     throw new Error(
-      'ata-vite requires ata-validator >= 0.11.1 with a public toTypeScript export.',
+      'ata-vite requires ata-validator >= 0.19.0 with the ata-validator/build entry.',
     )
   }
-  return api
+  return { ...api, toStandaloneModule: build.toStandaloneModule }
 }
 
 function ensureArray(value) {
@@ -252,7 +256,7 @@ async function compileOne(schemaFile, options, root, api, logger, fresh = false)
   }
 
   const v = new api.Validator(schema)
-  const validatorSrc = v.toStandaloneModule({ format: options.format, abortEarly: options.abortEarly })
+  const validatorSrc = api.toStandaloneModule(v, { format: options.format, abortEarly: options.abortEarly })
   if (!validatorSrc) {
     logger?.warn?.(`[ata-vite] schema ${path.relative(root, schemaFile)} is too complex for standalone compilation`)
     return { changed: false, typeName: null, paths: null }
