@@ -8,3 +8,4 @@ test/fixtures/generated/
 .DS_Store
 test/fixtures/**/*.schema.js
 test/fixtures/**/*.schema.d.ts
+docs/superpowers/
