@@ -8,6 +8,8 @@ Vite plugin that compiles schema files into self-contained [`ata-validator`](htt
 
 Schemas can be authored as `.json`, `.js`, or `.ts`.
 
+Since 0.5.0 this package is the Vite entry of [unplugin-ata](https://github.com/ata-core/unplugin-ata), which does the same for Webpack, Rollup, Rolldown, esbuild and Rspack from one implementation. Nothing changes for Vite users; projects on another bundler install `unplugin-ata` directly.
+
 ## Install
 
 ```bash

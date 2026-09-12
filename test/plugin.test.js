@@ -164,7 +164,7 @@ describe('ata-vite', () => {
 
   it('plugin has the Vite hook surface', () => {
     const plugin = ataVite({ schemas: 'schemas/*.json' })
-    assert.equal(plugin.name, 'ata-vite')
+    assert.equal(plugin.name, 'unplugin-ata')
     assert.equal(typeof plugin.buildStart, 'function')
     assert.equal(typeof plugin.handleHotUpdate, 'function')
     assert.equal(typeof plugin.watchChange, 'function')
