@@ -4,7 +4,7 @@
 
 # ata-vite
 
-Vite plugin that compiles schema files into self-contained [`ata-validator`](https://ata-validator.com) modules plus TypeScript declarations. Build time instead of runtime, ~1 KB gzipped per schema, full type narrowing via `isValid`.
+Vite plugin that compiles schema files into self-contained [`ata-validator`](https://ata-validator.com) modules plus TypeScript declarations. Build time instead of runtime, a few KB gzipped per schema (1.4 KB for a small one, 4.8 KB for a ten-field one with full error detail), full type narrowing via `isValid`.
 
 Schemas can be authored as `.json`, `.js`, or `.ts`.
 
@@ -192,7 +192,7 @@ ata({
 
 ### `abortEarly`
 
-Replaces the detailed error collector in the generated validator with a shared stub. Output drops from roughly 1.2 KB gzipped to 0.6 KB gzipped on a typical 10-field schema. Use it when the caller only needs a boolean reject/accept decision.
+Replaces the detailed error collector in the generated validator with a shared stub. Output drops from roughly 4.8 KB gzipped to 2.5 KB gzipped on a typical 10-field schema, measured on ata-validator 1.25.0. Use it when the caller only needs a boolean reject/accept decision.
 
 ### `outDir`
 
