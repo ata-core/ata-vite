@@ -1,6 +1,6 @@
 {
   "name": "ata-vite",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Vite plugin that compiles JSON, JS, and TS schema files to ata-validator standalone modules with TypeScript types. The Vite entry of @ata-project/unplugin.",
   "type": "module",
   "main": "./src/index.js",
@@ -42,11 +42,11 @@
     "vite": ">=5.0.0"
   },
   "devDependencies": {
-    "ata-validator": "^1.23.0",
+    "ata-validator": "^1.25.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.2"
   },
   "dependencies": {
-    "@ata-project/unplugin": "^0.1.0"
+    "@ata-project/unplugin": "^0.1.1"
   }
 }
