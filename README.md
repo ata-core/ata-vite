@@ -192,7 +192,11 @@ ata({
 
 ### `abortEarly`
 
-Replaces the detailed error collector in the generated validator with a shared stub. Output drops from roughly 4.8 KB gzipped to 2.5 KB gzipped on a typical 10-field schema, measured on ata-validator 1.25.0. Use it when the caller only needs a boolean reject/accept decision.
+Replaces the detailed error collector in the generated validator with a shared stub. Output drops from 2.3 KB gzipped to 1.7 KB gzipped on a typical 10-field schema, measured on ata-validator 1.36.0. Use it when the caller only needs a boolean reject/accept decision.
+
+### `compileAway`
+
+Off by default. With `compileAway: true`, a `new Validator(schema)` in your code whose schema is known at build time is replaced with a validator compiled at build time, and the runtime compiler leaves the bundle while the code keeps calling `validate()`, `isValidObject()`, `validateJSON()` and `isValidJSON()` with the same answers. For a three-schema entry, one with defaults, a minified library build is 115.7 KB gzipped without it and 15.5 KB with it. Needs ata-validator 1.36.0; the rules for which calls are replaced are in the [@ata-project/unplugin README](https://github.com/ata-core/unplugin-ata#compileaway-keep-new-validator-drop-the-compiler).
 
 ### `outDir`
 

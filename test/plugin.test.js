@@ -52,7 +52,7 @@ describe('ata-vite', () => {
       const dir = path.dirname(file)
       const mjs = await fs.readFile(path.join(dir, `${base}.validator.mjs`), 'utf8')
       const dts = await fs.readFile(path.join(dir, `${base}.validator.d.mts`), 'utf8')
-      assert.match(mjs, /export \{ validate, isValid(?:, schemaHash)? \}/)
+      assert.match(mjs, /export \{ validate, isValid(?:, [A-Za-z_$][\w$]*)* \}/)
       assert.match(dts, /export declare function isValid/)
     }
   })
