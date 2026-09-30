@@ -196,7 +196,7 @@ Replaces the detailed error collector in the generated validator with a shared s
 
 ### `compileAway`
 
-Off by default. With `compileAway: true`, a `new Validator(schema)` in your code whose schema is known at build time is replaced with a validator compiled at build time, and the runtime compiler leaves the bundle while the code keeps calling `validate()`, `isValidObject()`, `validateJSON()` and `isValidJSON()` with the same answers. For a three-schema entry, one with defaults, a minified library build is 115.7 KB gzipped without it and 15.5 KB with it. Needs ata-validator 1.36.0, and 1.37.0 for calls written as `new Validator(schema, { useDefaults: false })`; the rules for which calls are replaced are in the [@ata-project/unplugin README](https://github.com/ata-core/unplugin-ata#compileaway-keep-new-validator-drop-the-compiler).
+On by default; `compileAway: false` turns it off. A `new Validator(schema)` in your code whose schema is known at build time is replaced with a validator compiled at build time, and the runtime compiler leaves the bundle while the code keeps calling `validate()`, `isValidObject()`, `validateJSON()` and `isValidJSON()` with the same answers. Code that only calls `isValidObject()` or `isValidJSON()` gets a smaller wrapper without the error machinery, and `withKeywords(new Validator(schema))` from `@ata-project/keywords` is compiled too. A small app bundles to 2.6 KB gzipped when it only asks for a boolean and 12.1 KB when it reads errors, against 102.0 KB with the runtime, on ata-validator 1.40.0. The rules for which calls are replaced are in the [@ata-project/unplugin README](https://github.com/ata-core/unplugin-ata#compileaway-keep-new-validator-drop-the-compiler).
 
 ### `outDir`
 
