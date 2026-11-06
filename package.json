@@ -1,6 +1,6 @@
 {
   "name": "ata-vite",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "Vite plugin for ata-validator: schemas become validators and TypeScript types at build time, with no compiler in the bundle.",
   "type": "module",
   "main": "./src/index.js",
@@ -42,11 +42,11 @@
     "vite": ">=5.0.0"
   },
   "devDependencies": {
-    "ata-validator": "^1.62.0",
+    "ata-validator": "^1.63.1",
     "typescript": "^7.0.2",
     "vite": "^8.3.5"
   },
   "dependencies": {
-    "@ata-project/unplugin": "^0.11.3"
+    "@ata-project/unplugin": "^0.13.0"
   }
 }
