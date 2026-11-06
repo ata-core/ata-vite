@@ -8,7 +8,7 @@ Vite plugin that compiles schema files into self-contained [`ata-validator`](htt
 
 Schemas can be authored as `.json`, `.js`, or `.ts`.
 
-Since 0.5.0 this package is the Vite entry of [@ata-project/unplugin](https://github.com/ata-core/unplugin-ata), which does the same for Webpack, Rollup, Rolldown, esbuild and Rspack from one implementation. Nothing changes for Vite users; projects on another bundler install `@ata-project/unplugin` directly.
+Since 0.5.0 this package is the Vite entry of [@ata-project/unplugin](https://github.com/ata-core/unplugin-ata), which does the same for Webpack, Rollup, Rolldown, esbuild, Rspack and Bun from one implementation. Nothing changes for Vite users; projects on another bundler install `@ata-project/unplugin` directly.
 
 ## Install
 
@@ -187,8 +187,16 @@ ata({
   abortEarly: false,             // true = stub errors, smallest output
   types: true,                   // false to skip .d.mts / .d.cts
   nameFromFile: (file) => string // customize the TS type name derived from filename
+  zod: 'src/events/*.ts',        // modules exporting zod 4 schemas; validators written beside each
+  from: 'src/schemas/*.ts',      // the same for modules of zod, valibot or TypeBox schemas
 })
 ```
+
+Every option of `@ata-project/unplugin` passes through unchanged; `zod` and
+`from` (since unplugin 0.13.0) compile the exported schemas at build time so
+the page keeps the library it writes schemas in and carries neither it nor a
+validator runtime. The rules, what is refused and why, and the measured sizes
+are in the [unplugin README](https://github.com/ata-core/unplugin-ata#keep-your-schema-library-lose-it-from-the-page).
 
 ### `abortEarly`
 
@@ -225,7 +233,7 @@ Returns `{ files, results }` where `results[i].changed` indicates whether the ou
 
 ## What it does under the hood
 
-Each matched schema is compiled via `new Validator(schema).toStandaloneModule(...)` and `toTypeScript(schema, { name })` from `ata-validator`. No subprocess, no CLI wrapper. The plugin hooks:
+Each matched schema goes through the `@ata-project/unplugin` core, which compiles it with ata-validator's standalone compiler (the same output as `ata build`) and writes the declarations with `toTypeScript(schema, { name })`. No subprocess, no CLI wrapper. The plugin hooks:
 
 - `configResolved` - resolve Vite root and logger
 - `buildStart` - compile every matched schema
